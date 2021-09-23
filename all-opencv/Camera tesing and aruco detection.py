@@ -10,7 +10,7 @@ vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 while(1):
     __, frame = vid.read()
-    #print(frame.shape[0], frame.shape[1])
+    print(frame.shape[0], frame.shape[1])
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     parameters = aruco.DetectorParameters_create()
     corners, ids, rejectedImgPoints = aruco.detectMarkers(
