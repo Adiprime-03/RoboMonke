@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from intersect import intersection
 import socket
 from datetime import datetime as dt
+import csv
+import pandas as pd
 
 
 # have to define e, x, y, t, s
@@ -67,7 +69,7 @@ vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 
-out = cv2.VideoWriter('submission.avi', fourcc, 20.0, (640, 480))
+out = cv2.VideoWriter('submission.avi', fourcc, 20.0, (1280, 720))
 
 # robot1
 
@@ -81,15 +83,13 @@ phi = np.arange(0, 360, 2)
 
 port = 8090
 
+table = pd.read_csv('coords.csv')
+
 r = []
-r.append(robot(1, [0, 0], '192.168.19.230', [574, 39], [110, 475], np.array(
-    [574, 574, 110]), np.array([681, 245, 245]), "R"))
-r.append(robot(2, [0, 0], '192.168.19.109', [630, 35], [113, 531], np.array(
-    [630, 630, 113]), np.array([685, 189, 189]), "R"))
-r.append(robot(3, [0, 0], '192.168.19.172', [681, 35], [1197, 557], np.array(
-    [681, 681, 1197]), np.array([685, 163, 163]), "L"))
-r.append(robot(4, [0, 0], '192.168.19.26', [729, 33], [1194, 489], np.array(
-    [729, 729, 1194]), np.array([687, 231, 231]), "L"))
+r.append(robot(1, [0, 0], '192.168.19.230', [table['x'][0], table['y'][0]], [table['x'][1], table['y'][1]], np.array([table['x'][0], table['x'][0], table['x'][1]]), np.array([dim[1] - table['y'][0], dim[1] - table['y'][1], dim[1] - table['y'][1]]), "R"))
+r.append(robot(2, [0, 0], '192.168.19.109', [table['x'][2], table['y'][2]], [table['x'][3], table['y'][3]], np.array([table['x'][2], table['x'][2], table['x'][3]]), np.array([dim[1] - table['y'][2], dim[1] - table['y'][3], dim[1] - table['y'][3]]), "R"))
+r.append(robot(3, [0, 0], '192.168.19.172', [table['x'][4], table['y'][4]], [table['x'][5], table['y'][5]], np.array([table['x'][4], table['x'][4], table['x'][5]]), np.array([dim[1] - table['y'][4], dim[1] - table['y'][5], dim[1] - table['y'][5]]), "L"))
+r.append(robot(4, [0, 0], '192.168.19.26', [table['x'][6], table['y'][6]], [table['x'][7], table['y'][7]], np.array([table['x'][6], table['x'][6], table['x'][7]]), np.array([dim[1] - table['y'][6], dim[1] - table['y'][7], dim[1] - table['y'][7]]), "L"))
 
 client = []
 
