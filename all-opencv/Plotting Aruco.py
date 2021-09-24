@@ -51,7 +51,7 @@ class robot():
 
 aruco_dict = aruco.Dictionary_get(aruco.DICT_7X7_250)
 
-vid = cv2.VideoCapture(1)
+vid = cv2.VideoCapture(0)
 
 # robot1
 
