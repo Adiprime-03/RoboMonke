@@ -50,7 +50,7 @@ while(1):
                 r = cv2.Rodrigues(rvec)
                 print(r[0])
                 if(-1<r[0][2][2]<-0.9):
-                    if((0.9<abs(r[0][0][0])<1 and 0.9<abs(r[0][1][1])<1) or  (0.9<abs(r[0][0][1])<1 and 0.9<abs(r[0][1][0])<1)):
+                    if((0.95<abs(r[0][0][0])<=1 and 0.95<abs(r[0][1][1])<=1) or  (0.95<abs(r[0][0][1])<=1 and 0.95<abs(r[0][1][0])<=1)):
                         cv2.putText(frame, "straight", (10, 460), Font, 2, (0, 0, 255), 2)
                     else:
                         cv2.putText(frame, "gay", (10, 460), Font, 2, (0, 0, 255), 2)

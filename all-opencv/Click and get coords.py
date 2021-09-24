@@ -1,5 +1,22 @@
 # importing the module
 import cv2
+import csv
+
+fields = ['x', 'y']
+
+filename = "coords.csv"
+
+# writing to csv file 
+with open(filename, 'w', newline = '') as csvfile: 
+    # creating a csv writer object 
+    csvwriter = csv.writer(csvfile) 
+        
+    # writing the fields 
+    csvwriter.writerow(fields)
+
+    csvfile.close()
+
+
 
 # function to display the coordinates of
 # of the points clicked on the image
@@ -11,7 +28,22 @@ def click_event(event, x, y, flags, params):
         # displaying the coordinates
         # on the Shell
         print(x, ' ', y)
- 
+
+        
+
+        # writing to csv file 
+        with open(filename, 'a', newline = '') as csvfile: 
+            # creating a csv writer object 
+            csvwriter = csv.writer(csvfile) 
+                
+            # # writing the fields 
+            # csvwriter.writerow(fields) 
+            
+            # writing the data rows 
+            csvwriter.writerow([int(x), int(y)])
+            csvfile.close()
+        
+
         # displaying the coordinates
         # on the image window
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -26,6 +58,8 @@ def click_event(event, x, y, flags, params):
         # displaying the coordinates
         # on the Shell
         print(x, ' ', y)
+
+
  
         # displaying the coordinates
         # on the image window
@@ -42,7 +76,7 @@ def click_event(event, x, y, flags, params):
 # driver function
 if __name__=="__main__":
 
-    vid = cv2.VideoCapture(1)
+    vid = cv2.VideoCapture(0)
 
     __, img = vid.read()
  
@@ -55,6 +89,9 @@ if __name__=="__main__":
     # setting mouse hadler for the image
     # and calling the click_event() function
     cv2.setMouseCallback('image', click_event)
+
+
+    
  
     # wait for a key to be pressed to exit
     cv2.waitKey(0)
