@@ -73,7 +73,7 @@ for i in range(0, 1):
     while(r[i].stage != 8):
         __, frame = vid.read()
         #print(frame.shape[0], frame.shape[1])
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  
         parameters = aruco.DetectorParameters_create()
         corners, ids, rejectedImgPoints = aruco.detectMarkers(
             gray, aruco_dict, parameters=parameters)
