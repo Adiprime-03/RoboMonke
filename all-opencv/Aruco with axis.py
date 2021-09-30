@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import time
 from cv2 import aruco
+import time
+from matplotlib import pyplot as plt
 
 
 
@@ -18,6 +20,10 @@ out = cv2.VideoWriter('submission.avi', fourcc, 20.0, (640, 480))
 
 Font = cv2.FONT_HERSHEY_COMPLEX
 
+
+plt.ylim(-2, 2)
+x = []
+y = []
 while(1):
     __, frame = vid.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -50,12 +56,28 @@ while(1):
                 r = cv2.Rodrigues(rvec)
                 print(r[0])
                 if(-1<r[0][2][2]<-0.9):
-                    if((0.95<abs(r[0][0][0])<=1 and 0.95<abs(r[0][1][1])<=1) or  (0.95<abs(r[0][0][1])<=1 and 0.95<abs(r[0][1][0])<=1)):
+                    if(0.85<r[0][0][0]<=1 and -0.15<r[0][1][0]<0.15):
                         cv2.putText(frame, "straight", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(0.85<r[0][1][0]<=1 and -0.15<r[0][0][0]<0.15):
+                        cv2.putText(frame, "right", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(-1<=r[0][1][0]<-0.85 and -0.15<r[0][0][0]<0.15):
+                        cv2.putText(frame, "left", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(-1<=r[0][0][0]<-0.85 and -0.15<r[0][1][0]<0.15):
+                        cv2.putText(frame, "back", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(0.15<=r[0][0][0]<=1 and -1<=r[0][1][0]<=-0.15):
+                        cv2.putText(frame, "gay 1", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(0.15<=r[0][0][0]<=1 and 0.15<=r[0][1][0]<=1):
+                        cv2.putText(frame, "gay 4", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(-1<=r[0][0][0]<=-0.15 and -1<=r[0][1][0]<=-0.15):
+                        cv2.putText(frame, "gay 2", (10, 460), Font, 2, (0, 0, 255), 2)
+                    elif(-1<=r[0][0][0]<=-0.15 and 0.15<=r[0][1][0]<=1):
+                        cv2.putText(frame, "gay 3", (10, 460), Font, 2, (0, 0, 255), 2)
                     else:
-                        cv2.putText(frame, "gay", (10, 460), Font, 2, (0, 0, 255), 2)
+                        cv2.putText(frame, "weird shit", (10, 460), Font, 2, (0, 0, 255), 2)
                 else:
                     cv2.putText(frame, "not oriented properly", (10, 460), Font, 2, (0, 0, 255), 2)
+                x.append(time.time())
+                y.append(r[0][1][0])
                 
     except:
         if ids is None or len(ids) == 0:
@@ -70,6 +92,9 @@ while(1):
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
         break
+
+plt.plot(x, y, ".r")
+plt.show()
 
 out.release()
 vid.release()

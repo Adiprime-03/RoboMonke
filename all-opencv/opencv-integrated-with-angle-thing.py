@@ -10,48 +10,59 @@ from datetime import datetime as dt
 import csv
 import pandas as pd
 import Calibration
-
+#binding all IP
+HOST='0.0.0.0'
+#listening on port
+PORT=44444
+#size of receive buffer
+BUFFER_SIZE=1024
+#Creating UDP socket
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind((HOST,PORT))
 
 # have to define e, x, y, t, s
 # have to define start, end, fturning, sturning as tuples
+Font = cv2.FONT_HERSHEY_COMPLEX
 
-
-e = 0.3
+e = 25
 x = 30
 y = 30
-t = 100000
+t = 5
 side_length = 0
 
 radius = 100
 
 p = math.pi
 
-def staright_or_gay(rvec):
+def straight_or_gay(rvec, frame):
     r = cv2.Rodrigues(rvec)
-    v = []
-    v.append(r[0][0][0])
-    v.append(r[0][1][0])
     if(-1<r[0][2][2]<-0.9):
-        if(0.93<v[0]<=1 and 0<=v[1]<0.07):
-            return "facing straight"
-        elif(-0.07<v[0]<0.07 and -1<=v[1]<-0.93):
-            return "facing right"
-        elif(-0.07<v[0]<0.07 and 0.93<v[1]<=1):
-            return "facing left"
-        elif(-1<v[0]<-0.93 and -0.07<v[1]<0.07):
-            return "facing down"
-        elif(0.07<=v[0]<=0.93 and 0.07<=v[1]<=0.93):
+        if(0.85<r[0][0][0]<=1 and -0.15<r[0][1][0]<0.15):
+            cv2.putText(frame, "straight", (10, 460), Font, 2, (0, 0, 255), 2)
+            return "straight"
+        elif(0.85<r[0][1][0]<=1 and -0.15<r[0][0][0]<0.15):
+            cv2.putText(frame, "right", (10, 460), Font, 2, (0, 0, 255), 2)
+            return "right"
+        elif(-1<=r[0][1][0]<-0.85 and -0.15<r[0][0][0]<0.15):
+            cv2.putText(frame, "left", (10, 460), Font, 2, (0, 0, 255), 2)
+            return "left"
+        elif(-1<=r[0][0][0]<-0.85 and -0.15<r[0][1][0]<0.15):
+            cv2.putText(frame, "back", (10, 460), Font, 2, (0, 0, 255), 2)
+            return "back"
+        elif(0.15<=r[0][0][0]<=1 and -1<=r[0][1][0]<=-0.15):
+            cv2.putText(frame, "gay 1", (10, 460), Font, 2, (0, 0, 255), 2)
             return "gay 1"
-        elif(-0.93<=v[0]<=-0.07 and 0.07<=v[1]<=0.93):
-            return "gay 2"
-        elif(-0.93<=v[0]<=-0.07 and -0.93<=v[1]<=-0.07):
-            return "gay 3"
-        elif(0.07<=v[0]<=0.93 and -0.93<=v[1]<=-0.07):
+        elif(0.15<=r[0][0][0]<=1 and 0.15<=r[0][1][0]<=1):
+            cv2.putText(frame, "gay 4", (10, 460), Font, 2, (0, 0, 255), 2)
             return "gay 4"
-        else:
-            return "weird shit"
-               
+        elif(-1<=r[0][0][0]<=-0.15 and -1<=r[0][1][0]<=-0.15):
+            cv2.putText(frame, "gay 2", (10, 460), Font, 2, (0, 0, 255), 2)
+            return "gay 2"
+        elif(-1<=r[0][0][0]<=-0.15 and 0.15<=r[0][1][0]<=1):
+            cv2.putText(frame, "gay 3", (10, 460), Font, 2, (0, 0, 255), 2)
+            return "gay 3"
     else:
+        cv2.putText(frame, "not oriented properly", (10, 460), Font, 2, (0, 0, 255), 2)
         return "not oriented"
 
 
@@ -124,7 +135,7 @@ for i in range(0, 4, 1):
                     b = b/4.0
                     rvec, tvec, markerPoints = aruco.estimatePoseSingleMarkers(corners[k], 0.02, matrix_coefficients, distortion_coefficients)
                     aruco.drawAxis(frame, matrix_coefficients, distortion_coefficients, rvec, tvec, 0.01)
-                    check = check + staright_or_gay(rvec)
+                    check = check + straight_or_gay(rvec,frame)
                 k = k + 1
 
 
@@ -142,72 +153,78 @@ for i in range(0, 4, 1):
             print(check)
 
             if(r[i].stage == 0):
-                if(abs(b-r[i].start[1]) > radius):
-                    r[i].stage = 1
-                else:
-                    if(check == "facing straight"):
-                        print("F")
-                    elif(check == "gay 1"):
-                        print("R")
-                    elif(check == "gay 4"):
-                        print("L")
-                    else:
-                        print("Robot gone rogue")
-                        print("S")
+                r[i].stage=1
                     
             elif(r[i].stage == 1):
                 if(abs(r[i].position[1]-corner[1])<e):
                     print("S")
+                    s.sendto("S".encode(),(r[i].hostip,PORT))
                     r[i].stage = 2
                 else:
                     if(check == "facing straight"):
                         print("F")
-                    elif(check == "gay 1"):
+                        s.sendto("F".encode(),(r[i].hostip,PORT))
+                    elif(check=="gay 1"):
                         print("R")
-                    elif(check == "gay 4"):
+                        s.sendto("R".encode(),(r[i].hostip,PORT))
+                    elif(check=="gay 4"):
                         print("L")
+                        s.sendto("L".encode(),(r[i].hostip,PORT))
                     else:
                         print("Robot gone rogue")
                         print("S")
+                        s.sendto("S".encode(),(r[i].hostip,PORT))
             
             elif(r[i].stage == 2):
-                if(check == "facing " + r[i].direction):
+                if(check == r[i].direction):
                     r[i].stage = 3
                 else:
                     if(r[i].direction == "right"):
                         print("R")
+                        s.sendto("R".encode(),(r[i].hostip,PORT))
                     else:
                         print("L")
+                        s.sendto("L".encode(),(r[i].hostip,PORT))
             
             elif(r[i].stage == 3):
                 if(abs(r[i].position[0]-r[i].end[0])<e):
                     print("S")
+                    s.sendto("S".encode(),(r[i].hostip,PORT))
                     r[i].stage = 4
                     instant = time.time()
                 else:
                     if(r[i].direction == "right"):
-                        if(check == "facing " + r[i].direction):
+                        if(check == r[i].direction):
                             print("F")
-                        elif(check == "gay 3"):
+                            s.sendto("F".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 3"):
                             print("L")
-                        elif(check == "gay 4"):
+                            s.sendto("L".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 4"):
                             print("R")
+                            s.sendto("R".encode(),(r[i].hostip,PORT))
                         else:
                             print("Robot gone rogue")
                             print("S")
+                            s.sendto("S".encode(),(r[i].hostip,PORT))
                     else:
-                        if(check == "facing " + r[i].direction):
+                        if(check == r[i].direction):
                             print("F")
-                        elif(check == "gay 1"):
-                            print("L")
-                        elif(check == "gay 2"):
+                            s.sendto("F".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 2"):
                             print("R")
+                            s.sendto("R".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 1"):
+                            print("L")
+                            s.sendto("L".encode(),(r[i].hostip,PORT))
                         else:
                             print("Robot gone rogue")
                             print("S")
+                            s.sendto("S".encode(),(r[i].hostip,PORT))
             
             elif(r[i].stage == 4):
                 print("X")
+                s.sendto("X".encode(),(r[i].hostip,PORT))
                 tau = time.time()
                 if(tau - instant >t):
                     r[i].stage = 5
@@ -215,56 +232,73 @@ for i in range(0, 4, 1):
             elif(r[i].stage == 5):
                 if(abs(r[i].position[0]-corner[0])<e):
                     print("S")
+                    s.sendto("S".encode(),(r[i].hostip,PORT))
                     r[i].stage = 6
                 else:
                     if(r[i].direction == "right"):
-                        if(check == "facing " + r[i].direction):
+                        if(check == r[i].direction):
                             print("V")
-                        elif(check == "gay 3"):
+                            s.sendto("V".encode(),(r[i].hostip,PORT))
+                        elif(check== "gay 3"):
                             print("L")
-                        elif(check == "gay 4"):
+                            s.sendto("L".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 4"):
                             print("R")
+                            s.sendto("R".encode(),(r[i].hostip,PORT))
                         else:
                             print("Robot gone rogue")
                             print("S")
+                            s.sendto("S".encode(),(r[i].hostip,PORT))
                     else:
-                        if(check == "facing " + r[i].direction):
+                        if(check == r[i].direction):
                             print("V")
-                        elif(check == "gay 1"):
-                            print("L")
-                        elif(check == "gay 2"):
+                            s.sendto("V".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 2"):
                             print("R")
+                            s.sendto("R".encode(),(r[i].hostip,PORT))
+                        elif(check=="gay 1"):
+                            print("L")
+                            s.sendto("L".encode(),(r[i].hostip,PORT))
                         else:
                             print("Robot gone rogue")
                             print("S")
+                            s.sendto("S".encode(),(r[i].hostip,PORT))
 
             elif(r[i].stage == 6):
-                if(check == "facing " + r[i].direction):
+                if(check == r[i].direction):
                     r[i].stage = 7
                 else:
                     if(r[i].direction == "right"):
                         print("R")
+                        s.sendto("R".encode(),(r[i].hostip,PORT))
                     else:
                         print("L")
+                        s.sendto("L".encode(),(r[i].hostip,PORT))
             
             elif(r[i].stage == 7):
                 if(abs(r[i].position[1]-r[i].start[1])<e):
                         print("S")
+                        s.sendto("S".encode(),(r[i].hostip,PORT))
                         r[i].stage = 8
                 else:
-                    if(check == "facing straight"):
+                    if(check == "straight"):
                         print("V")
-                    elif(check == "gay 1"):
+                        s.sendto("V".encode(),(r[i].hostip,PORT))
+                    elif(check=="gay 1"):
                         print("R")
-                    elif(check == "gay 4"):
+                        s.sendto("R".encode(),(r[i].hostip,PORT))
+                    elif(check=="gay 4"):
                         print("L")
+                        s.sendto("L".encode(),(r[i].hostip,PORT))
                     else:
                         print("Robot gone rogue")
                         print("S")
+                        s.sendto("S".encode(),(r[i].hostip,PORT))
         
             else:
                 print("Unknown stage")
                 print("S")
+                s.sendto("S".encode(),(r[i].hostip,PORT))
         
         elif(0<=len(corners)<4):
             print("Few robots are missing")
@@ -279,5 +313,6 @@ for i in range(0, 4, 1):
             cv2.destroyAllWindows()
             break
     i = i + 1
+s.close()
 vid.release()
 out.release()
